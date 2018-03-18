@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        ">
+    <bean id="servicePeers" class="com.infeez.ignite.IgniteFinder">
+        <constructor-arg name="envAddress" value="#{systemEnvironment['IGNITE_SERVICE_ADDRESS_MASK']}"/>
+        <constructor-arg name="envPort" value="#{systemEnvironment['IGNITE_SERVICE_PORT']}"/>
+    </bean>
+    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="igniteInstanceName" value="server.node"/>
+        <property name="peerClassLoadingEnabled" value="false"/>
+        <property name="addressResolver">
+            <bean class="org.apache.ignite.configuration.BasicAddressResolver">
+                <constructor-arg>
+                    <map>
+                        <entry key="#{systemEnvironment['DOCKER_LOCAL_IP']}" value="#{systemEnvironment['HOST_LOCAL_IP']}"/>
+                    </map>
+                </constructor-arg>
+            </bean>
+        </property>
+        <property name="localHost" value="#{systemEnvironment['IGNITE_LOCAL_HOST']}"/>
+        <property name="systemThreadPoolSize" value="32"/>
+        <property name="publicThreadPoolSize" value="64"/>
+
+        <property name="rebalanceThreadPoolSize" value="4"/>
+        <property name="dataStorageConfiguration">
+            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+                <property name="dataRegionConfigurations">
+                    <list>
+                        <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                            <property name="name" value="default_cache"/>
+                            <property name="persistenceEnabled" value="false"/>
+                            <property name="initialSize" value="#{100L * 1024 * 1024}"/>
+                            <property name="maxSize" value="#{1024L * 1024 * 1024}"/>
+                            <property name="pageEvictionMode" value="RANDOM_2_LRU"/>
+                        </bean>
+                        <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                            <property name="name" value="main"/>
+                            <property name="persistenceEnabled" value="true"/>
+                            <property name="initialSize" value="#{512L * 1024 * 1024}"/>
+                            <property name="maxSize" value="#{5 * 1024L * 1024 * 1024}"/>
+                            <property name="pageEvictionMode" value="RANDOM_2_LRU"/>
+                        </bean>
+                    </list>
+                </property>
+                <property name="walMode" value="BACKGROUND"/>
+                <property name="walFlushFrequency" value="#{5 * 1000}"/>
+            </bean>
+        </property>
+        <property name="cacheConfiguration">
+            <list>
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="backups" value="2"/>
+                    <property name="name" value="main"/>
+                    <property name="cacheMode" value="REPLICATED"/>
+                    <property name="atomicityMode" value="ATOMIC"/>
+                    <property name="writeSynchronizationMode" value="FULL_ASYNC"/>
+                    <property name="dataRegionName" value="main"/>
+                    <property name="rebalanceBatchSize" value="#{1024 * 1024}"/>
+                    <property name="rebalanceThrottle" value="0"/>
+                </bean>
+            </list>
+        </property>
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="ipFinder">
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+                        <property name="addresses" value="#{servicePeers.addresses}"/>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+        <property name="serviceConfiguration">
+            <list>
+                <bean class="org.apache.ignite.services.ServiceConfiguration">
+                    <property name="name" value="simpleCacheServiceProxy"/>
+                    <property name="service">
+                        <bean class="com.infeez.ignite.services.SimpleCacheService"/>
+                    </property>
+                    <property name="totalCount" value="0"/>
+                    <property name="maxPerNodeCount" value="1"/>
+                </bean>
+                <bean class="org.apache.ignite.services.ServiceConfiguration">
+                    <property name="name" value="simpleServiceProxy"/>
+                    <property name="service">
+                        <bean class="com.infeez.ignite.services.SimpleService"/>
+                    </property>
+                    <property name="totalCount" value="0"/>
+                    <property name="maxPerNodeCount" value="1"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>

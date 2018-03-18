@@ -1,0 +1,46 @@
+networks:
+  hey-network:
+    driver: bridge
+    ipam:
+      config:
+      - gateway: 172.20.0.1
+        subnet: 172.20.0.0/29
+      driver: default
+
+services:
+  node-1:
+    environment:
+      SERVER_PORT: '3333'
+      SERVER_NAME: 'SERVER_1'
+      MEM_MIN: "1g"
+      MEM_MAX: "5g"
+      IGNITE_SERVICE_PORT: '47500'
+      IGNITE_SERVICE_ADDRESS_MASK: '172.20.0.0/29'
+      DOCKER_LOCAL_IP: 172.20.0.3
+      HOST_LOCAL_IP: 172.20.0.3
+    image: ignite-simple:latest
+    networks:
+      hey-network:
+        ipv4_address: 172.20.0.3
+    ports:
+      - 18787:8787
+      - 3333:3333
+  node-2:
+    environment:
+      SERVER_PORT: '3333'
+      SERVER_NAME: 'SERVER_2'
+      MEM_MIN: "1g"
+      MEM_MAX: "5g"
+      IGNITE_SERVICE_PORT: '47500'
+      IGNITE_SERVICE_ADDRESS_MASK: '172.20.0.0/29'
+      DOCKER_LOCAL_IP: 172.20.0.4
+      HOST_LOCAL_IP: 172.20.0.4
+    image: ignite-simple:latest
+    networks:
+      hey-network:
+        ipv4_address: 172.20.0.4
+    ports:
+      - 28787:8787
+
+version: '2.0'
+volumes: {}
