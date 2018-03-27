@@ -53,4 +53,12 @@ public class MainEndPoint {
         return simpleServiceProxy.getFromCache();
     }
 
+    @RequestMapping(value = "/start", method = RequestMethod.GET)
+    public void startInComputeGrid(@RequestParam("nodeId") String nodeId) {
+        Ignite ignite = mainController.getIgnite();
+        SimpleServiceProxy simpleServiceProxy = ignite.services(ignite.cluster().forNodeId(UUID.fromString(nodeId)))
+                .serviceProxy(SimpleServiceProxy.PROXY_NAME, SimpleServiceProxy.class, true);
+        simpleServiceProxy.startInComputeGrid();
+    }
+
 }

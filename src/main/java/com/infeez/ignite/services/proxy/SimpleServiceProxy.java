@@ -10,4 +10,6 @@ public interface SimpleServiceProxy {
 
     String getFromCache();
 
+    void startInComputeGrid();
+
 }
