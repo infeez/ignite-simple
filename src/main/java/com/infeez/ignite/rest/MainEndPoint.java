@@ -54,11 +54,19 @@ public class MainEndPoint {
     }
 
     @RequestMapping(value = "/start", method = RequestMethod.GET)
+    public void startInComputeGrid(@RequestParam("nodeId") String nodeId, @RequestParam("c") int c, @RequestParam("t") int t) {
+        Ignite ignite = mainController.getIgnite();
+        SimpleServiceProxy simpleServiceProxy = ignite.services(ignite.cluster().forNodeId(UUID.fromString(nodeId)))
+                .serviceProxy(SimpleServiceProxy.PROXY_NAME, SimpleServiceProxy.class, true);
+        simpleServiceProxy.startInComputeGrid(c, t);
+    }
+
+    @RequestMapping(value = "/calculate", method = RequestMethod.GET)
     public void startInComputeGrid(@RequestParam("nodeId") String nodeId) {
         Ignite ignite = mainController.getIgnite();
         SimpleServiceProxy simpleServiceProxy = ignite.services(ignite.cluster().forNodeId(UUID.fromString(nodeId)))
                 .serviceProxy(SimpleServiceProxy.PROXY_NAME, SimpleServiceProxy.class, true);
-        simpleServiceProxy.startInComputeGrid();
+        simpleServiceProxy.calculate();
     }
 
 }
